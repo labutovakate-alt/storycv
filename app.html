@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StoryCV — App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #1a1a2e;
+    --cream: #faf8f4;
+    --warm: #f5f0e8;
+    --accent: #e07a5f;
+    --accent-deep: #c45d3e;
+    --sage: #81b29a;
+    --sage-deep: #5a9a7a;
+    --muted: #8e8e9a;
+    --lavender: #d4c5e2;
+    --gold: #e6c068;
+    --paper: #fffdf9;
+    --danger: #e05f5f;
+    --sidebar-w: 280px;
+  }
+
+  html { font-size: 16px; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* grain */
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: 0.025; z-index: 9999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ══════════════════════════════════
+     LAYOUT
+  ══════════════════════════════════ */
+  .app { display: flex; height: 100vh; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--ink);
+    color: var(--paper);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 50;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .sidebar-header {
+    padding: 1.5rem 1.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .sidebar .logo-mark {
+    width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Instrument Serif', serif; font-size: 1rem; font-style: italic; color: white;
+  }
+
+  .sidebar .logo-text {
+    font-family: 'Instrument Serif', serif; font-size: 1.15rem; color: var(--paper);
+  }
+
+  .sidebar-nav { flex: 1; padding: 0.5rem 0.75rem; overflow-y: auto; }
+
+  .nav-section-label {
+    font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.3); padding: 1.25rem 0.75rem 0.5rem; font-weight: 500;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.7rem 0.75rem; border-radius: 12px;
+    color: rgba(255,255,255,0.55); font-size: 0.88rem; font-weight: 400;
+    cursor: pointer; transition: all 0.2s ease; border: none; background: none;
+    width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+  .nav-item.active { background: rgba(255,255,255,0.1); color: white; font-weight: 500; }
+
+  .nav-item .nav-icon {
+    width: 20px; text-align: center; font-size: 1rem; flex-shrink: 0;
+  }
+
+  .nav-item .nav-badge {
+    margin-left: auto;
+    font-size: 0.7rem; padding: 0.15rem 0.5rem;
+    background: var(--accent); color: white; border-radius: 10px; font-weight: 500;
+  }
+
+  .sidebar-footer {
+    padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+
+  .avatar {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--lavender));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 600; color: white;
+  }
+
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 0.85rem; font-weight: 500; color: var(--paper); }
+  .user-email { font-size: 0.7rem; color: rgba(255,255,255,0.35); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── Main area ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .main-header {
+    padding: 1.25rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(26,26,46,0.06);
+    background: rgba(250,248,244,0.8);
+    backdrop-filter: blur(12px);
+    flex-shrink: 0;
+  }
+
+  .main-header-left { display: flex; align-items: center; gap: 1rem; }
+
+  .hamburger {
+    display: none; background: none; border: none; cursor: pointer; padding: 0.25rem;
+    color: var(--ink); font-size: 1.3rem;
+  }
+
+  .page-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.5rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.8rem; color: var(--muted); font-weight: 400; margin-top: 0.15rem;
+  }
+
+  /* ── Step progress bar in header ── */
+  .progress-steps {
+    display: flex; align-items: center; gap: 0.25rem;
+  }
+
+  .p-step {
+    display: flex; align-items: center; gap: 0.25rem;
+  }
+
+  .p-step-dot {
+    width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 600; border: 2px solid rgba(26,26,46,0.12);
+    color: var(--muted); transition: all 0.3s ease; flex-shrink: 0;
+  }
+  .p-step.completed .p-step-dot { background: var(--sage); border-color: var(--sage); color: white; }
+  .p-step.active .p-step-dot { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .p-step-label {
+    font-size: 0.72rem; color: var(--muted); font-weight: 400; white-space: nowrap;
+  }
+  .p-step.active .p-step-label { color: var(--ink); font-weight: 500; }
+  .p-step.completed .p-step-label { color: var(--sage); }
+
+  .p-step-line {
+    width: 32px; height: 2px; background: rgba(26,26,46,0.08); border-radius: 1px; margin: 0 0.35rem;
+  }
+  .p-step.completed + .p-step-line,
+  .p-step-line.done { background: var(--sage); }
+
+  .main-content { flex: 1; overflow-y: auto; }
+
+  /* ══════════════════════════════════
+     STEP 1: TELL YOUR STORY
+  ══════════════════════════════════ */
+  .step-panel { display: none; height: 100%; }
+  .step-panel.active { display: flex; flex-direction: column; }
+
+  /* Chat interface */
+  .chat-area {
+    flex: 1; overflow-y: auto; padding: 2rem;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+
+  .chat-msg {
+    display: flex; gap: 0.75rem; max-width: 720px;
+    animation: msgIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .chat-msg.user { flex-direction: row-reverse; align-self: flex-end; }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-avatar {
+    width: 36px; height: 36px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
+  }
+  .chat-msg:not(.user) .msg-avatar { background: var(--ink); color: white; }
+  .chat-msg.user .msg-avatar { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: white; }
+
+  .msg-bubble {
+    padding: 1rem 1.25rem;
+    border-radius: 18px;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-width: 520px;
+  }
+  .chat-msg:not(.user) .msg-bubble {
+    background: var(--paper);
+    border: 1px solid rgba(26,26,46,0.06);
+    border-bottom-left-radius: 6px;
+    box-shadow: 0 1px 4px rgba(26,26,46,0.04);
+  }
+  .chat-msg.user .msg-bubble {
+    background: var(--ink);
+    color: var(--paper);
+    border-bottom-right-radius: 6px;
+  }
+
+  .msg-time {
+    font-size: 0.65rem; color: var(--muted); margin-top: 0.35rem;
+    padding: 0 0.25rem;
+  }
+  .chat-msg.user .msg-time { text-align: right; }
+
+  .typing-indicator {
+    display: flex; gap: 4px; padding: 1rem 1.25rem;
+    background: var(--paper); border-radius: 18px; border-bottom-left-radius: 6px;
+    border: 1px solid rgba(26,26,46,0.06); width: fit-content;
+  }
+  .typing-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--muted);
+    animation: typingBounce 1.4s ease-in-out infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Chat input */
+  .chat-input-bar {
+    padding: 1rem 2rem 1.5rem;
+    border-top: 1px solid rgba(26,26,46,0.06);
+    background: var(--cream);
+    flex-shrink: 0;
+  }
+
+  .chat-input-wrap {
+    display: flex; align-items: flex-end; gap: 0.75rem;
+    background: var(--paper);
+    border: 1.5px solid rgba(26,26,46,0.1);
+    border-radius: 20px;
+    padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .chat-input-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(224,122,95,0.08);
+  }
+
+  .chat-input {
+    flex: 1; border: none; outline: none; background: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+    color: var(--ink); resize: none; min-height: 24px; max-height: 120px;
+    line-height: 1.5; padding: 0.35rem 0;
+  }
+  .chat-input::placeholder { color: var(--muted); }
+
+  .chat-action-btn {
+    width: 40px; height: 40px; border-radius: 14px; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s ease; flex-shrink: 0; font-size: 1.1rem;
+  }
+
+  .btn-voice {
+    background: var(--warm); color: var(--ink);
+  }
+  .btn-voice:hover { background: var(--lavender); }
+  .btn-voice.recording { background: var(--danger); color: white; animation: recordPulse 1.5s ease-in-out infinite; }
+  @keyframes recordPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(224,95,95,0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(224,95,95,0); }
+  }
+
+  .btn-send {
+    background: var(--ink); color: var(--paper);
+  }
+  .btn-send:hover { background: var(--accent); }
+
+  .input-hint {
+    text-align: center; font-size: 0.72rem; color: var(--muted); margin-top: 0.6rem;
+  }
+
+  /* Story summary sidebar card */
+  .story-summary {
+    position: fixed; right: 2rem; top: 50%; transform: translateY(-50%);
+    width: 240px; background: var(--paper); border-radius: 20px;
+    padding: 1.5rem; box-shadow: 0 4px 24px rgba(26,26,46,0.06);
+    border: 1px solid rgba(26,26,46,0.06);
+    z-index: 20;
+  }
+
+  .summary-title {
+    font-family: 'Instrument Serif', serif; font-size: 1rem; margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+
+  .summary-item {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0; border-bottom: 1px solid rgba(26,26,46,0.04);
+    font-size: 0.78rem; color: var(--muted);
+  }
+  .summary-item:last-child { border: none; }
+
+  .summary-check {
+    width: 18px; height: 18px; border-radius: 6px; display: flex;
+    align-items: center; justify-content: center; font-size: 0.65rem; flex-shrink: 0;
+  }
+  .summary-check.done { background: rgba(129,178,154,0.15); color: var(--sage); }
+  .summary-check.pending { background: var(--warm); color: var(--muted); }
+
+  /* ══════════════════════════════════
+     STEP 2: ADD VACANCY
+  ══════════════════════════════════ */
+  .vacancy-panel {
+    max-width: 720px; margin: 0 auto; padding: 2.5rem 2rem;
+  }
+
+  .vacancy-header {
+    text-align: center; margin-bottom: 2.5rem;
+  }
+
+  .vacancy-header h2 {
+    font-family: 'Instrument Serif', serif; font-size: 1.8rem; margin-bottom: 0.5rem;
+  }
+
+  .vacancy-header p { color: var(--muted); font-size: 0.95rem; font-weight: 300; }
+
+  .vacancy-input-area {
+    background: var(--paper); border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(26,26,46,0.04), 0 8px 24px rgba(26,26,46,0.05);
+    border: 1px solid rgba(26,26,46,0.06);
+  }
+
+  .vacancy-tabs {
+    display: flex; gap: 0; background: var(--warm); border-radius: 12px; padding: 3px; margin-bottom: 1.5rem;
+  }
+
+  .vacancy-tab {
+    flex: 1; padding: 0.6rem; border: none; border-radius: 10px; background: transparent;
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500;
+    color: var(--muted); cursor: pointer; transition: all 0.2s ease; text-align: center;
+  }
+  .vacancy-tab.active { background: white; color: var(--ink); box-shadow: 0 1px 4px rgba(26,26,46,0.08); }
+
+  .vacancy-paste {
+    width: 100%; min-height: 200px; border: 1.5px dashed rgba(26,26,46,0.12);
+    border-radius: 16px; padding: 1.25rem; font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; line-height: 1.6; background: var(--cream); color: var(--ink);
+    resize: vertical; outline: none; transition: border-color 0.3s ease;
+  }
+  .vacancy-paste:focus { border-color: var(--accent); border-style: solid; }
+  .vacancy-paste::placeholder { color: var(--muted); }
+
+  .vacancy-url-input {
+    width: 100%; padding: 1rem 1.25rem; border: 1.5px solid rgba(26,26,46,0.1);
+    border-radius: 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+    background: var(--cream); color: var(--ink); outline: none;
+  }
+  .vacancy-url-input:focus { border-color: var(--accent); }
+
+  .vacancy-preview {
+    margin-top: 1.5rem; padding: 1.25rem; background: var(--warm); border-radius: 16px;
+    display: none;
+  }
+  .vacancy-preview.visible { display: block; animation: msgIn 0.4s forwards; }
+
+  .vp-company { font-size: 0.75rem; color: var(--accent); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem; }
+  .vp-title { font-family: 'Instrument Serif', serif; font-size: 1.2rem; margin-bottom: 0.75rem; }
+
+  .vp-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .vp-tag {
+    font-size: 0.72rem; padding: 0.25rem 0.6rem; border-radius: 20px;
+    background: rgba(26,26,46,0.06); color: var(--ink); font-weight: 500;
+  }
+
+  /* ══════════════════════════════════
+     STEP 3: GENERATED RESUME
+  ══════════════════════════════════ */
+  .resume-panel {
+    display: flex; gap: 2rem; padding: 2rem; height: 100%;
+  }
+
+  .resume-preview-col {
+    flex: 1; display: flex; flex-direction: column; min-width: 0;
+  }
+
+  .resume-doc {
+    flex: 1; background: white; border-radius: 16px; padding: 3rem;
+    box-shadow: 0 2px 16px rgba(26,26,46,0.06); border: 1px solid rgba(26,26,46,0.06);
+    overflow-y: auto; font-size: 0.88rem; line-height: 1.65;
+  }
+
+  .resume-doc-header {
+    border-bottom: 2.5px solid var(--ink); padding-bottom: 1rem; margin-bottom: 1.5rem;
+  }
+
+  .resume-doc-name {
+    font-family: 'Instrument Serif', serif; font-size: 1.8rem; margin-bottom: 0.15rem;
+  }
+
+  .resume-doc-role { color: var(--accent); font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; }
+  .resume-doc-contact { font-size: 0.78rem; color: var(--muted); display: flex; gap: 1rem; flex-wrap: wrap; }
+
+  .resume-section { margin-bottom: 1.5rem; }
+  .resume-section-title {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--accent); font-weight: 600; margin-bottom: 0.75rem;
+    padding-bottom: 0.35rem; border-bottom: 1px solid rgba(26,26,46,0.06);
+  }
+
+  .resume-entry { margin-bottom: 1rem; }
+  .resume-entry-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 0.25rem;
+  }
+  .resume-entry-title { font-weight: 600; font-size: 0.9rem; }
+  .resume-entry-date { font-size: 0.78rem; color: var(--muted); }
+  .resume-entry-company { font-size: 0.82rem; color: var(--muted); font-style: italic; margin-bottom: 0.35rem; }
+  .resume-entry-bullets { padding-left: 1.1rem; }
+  .resume-entry-bullets li { margin-bottom: 0.25rem; color: #444; font-size: 0.85rem; }
+
+  .resume-skills-grid { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .resume-skill {
+    font-size: 0.78rem; padding: 0.3rem 0.7rem; border-radius: 20px;
+    background: var(--warm); font-weight: 500;
+  }
+
+  /* Resume sidebar controls */
+  .resume-controls {
+    width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 1rem;
+  }
+
+  .control-card {
+    background: var(--paper); border-radius: 20px; padding: 1.5rem;
+    box-shadow: 0 1px 4px rgba(26,26,46,0.04); border: 1px solid rgba(26,26,46,0.06);
+  }
+
+  .control-card-title {
+    font-family: 'Instrument Serif', serif; font-size: 1.05rem; margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+
+  .match-meter {
+    height: 8px; border-radius: 4px; background: var(--warm); margin-bottom: 0.5rem; overflow: hidden;
+  }
+  .match-meter-fill {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--sage), var(--sage-deep));
+    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .match-label { font-size: 0.8rem; color: var(--sage); font-weight: 600; display: flex; justify-content: space-between; }
+
+  .keyword-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; }
+  .keyword-item {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 0.8rem; padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(26,26,46,0.04);
+  }
+  .keyword-item:last-child { border: none; }
+  .kw-found { color: var(--sage); }
+  .kw-missing { color: var(--muted); }
+
+  .btn-control {
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.75rem 1rem; border: none; border-radius: 14px; width: 100%;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500;
+    cursor: pointer; transition: all 0.25s ease;
+  }
+
+  .btn-control-primary {
+    background: var(--ink); color: var(--paper);
+  }
+  .btn-control-primary:hover { background: #2a2a4e; }
+
+  .btn-control-accent {
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: white; box-shadow: 0 4px 16px rgba(224,122,95,0.2);
+  }
+  .btn-control-accent:hover { box-shadow: 0 6px 24px rgba(224,122,95,0.3); transform: translateY(-1px); }
+
+  .btn-control-outline {
+    background: transparent; color: var(--ink); border: 1.5px solid rgba(26,26,46,0.12);
+  }
+  .btn-control-outline:hover { border-color: var(--ink); }
+
+  /* ══════════════════════════════════
+     STEP 4: COVER LETTER
+  ══════════════════════════════════ */
+  .cover-letter-panel {
+    display: flex; gap: 2rem; padding: 2rem; height: 100%;
+  }
+
+  .cl-doc {
+    flex: 1; background: white; border-radius: 16px; padding: 3rem;
+    box-shadow: 0 2px 16px rgba(26,26,46,0.06); border: 1px solid rgba(26,26,46,0.06);
+    overflow-y: auto; min-width: 0;
+  }
+
+  .cl-header { margin-bottom: 2rem; }
+  .cl-date { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .cl-greeting { font-weight: 500; margin-bottom: 1rem; font-size: 0.95rem; }
+  .cl-body p { margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.75; color: #333; }
+  .cl-signature { margin-top: 1.5rem; font-size: 0.9rem; }
+  .cl-signature strong { display: block; margin-top: 0.5rem; }
+
+  /* ══════════════════════════════════
+     STEP 5: APPLY
+  ══════════════════════════════════ */
+  .apply-panel {
+    max-width: 600px; margin: 0 auto; padding: 3rem 2rem; text-align: center;
+  }
+
+  .apply-success-icon {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--sage), var(--sage-deep));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; color: white; margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 32px rgba(129,178,154,0.3);
+  }
+
+  .apply-title {
+    font-family: 'Instrument Serif', serif; font-size: 2rem; margin-bottom: 0.75rem;
+  }
+
+  .apply-subtitle { color: var(--muted); font-size: 1rem; font-weight: 300; margin-bottom: 2rem; line-height: 1.6; }
+
+  .apply-card {
+    background: var(--paper); border-radius: 20px; padding: 1.5rem; text-align: left;
+    box-shadow: 0 2px 12px rgba(26,26,46,0.05); border: 1px solid rgba(26,26,46,0.06);
+    margin-bottom: 1.5rem;
+  }
+
+  .apply-card-row {
+    display: flex; align-items: center; gap: 1rem; padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(26,26,46,0.04); font-size: 0.88rem;
+  }
+  .apply-card-row:last-child { border: none; }
+  .apply-card-label { color: var(--muted); width: 100px; flex-shrink: 0; font-size: 0.8rem; }
+  .apply-card-value { font-weight: 500; flex: 1; }
+
+  .apply-attachments {
+    display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap;
+  }
+
+  .attach-chip {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.6rem 1rem; background: var(--warm); border-radius: 12px;
+    font-size: 0.82rem; font-weight: 500;
+  }
+
+  .attach-chip .attach-icon {
+    font-size: 1rem;
+  }
+
+  /* ══════════════════════════════════
+     GLOBAL BUTTONS
+  ══════════════════════════════════ */
+  .step-action-bar {
+    padding: 1rem 2rem; border-top: 1px solid rgba(26,26,46,0.06);
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--cream); flex-shrink: 0;
+  }
+
+  .btn-step {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.8rem 1.75rem; border: none; border-radius: 100px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 500;
+    cursor: pointer; transition: all 0.3s ease;
+  }
+
+  .btn-step-next { background: var(--ink); color: var(--paper); }
+  .btn-step-next:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,26,46,0.15); }
+
+  .btn-step-back { background: transparent; color: var(--muted); }
+  .btn-step-back:hover { color: var(--ink); }
+
+  .btn-step-accent {
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: white; box-shadow: 0 4px 20px rgba(224,122,95,0.25);
+  }
+  .btn-step-accent:hover { box-shadow: 0 8px 28px rgba(224,122,95,0.35); transform: translateY(-1px); }
+
+  /* ══════════════════════════════════
+     MOBILE
+  ══════════════════════════════════ */
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(26,26,46,0.4);
+    z-index: 40; opacity: 0; transition: opacity 0.3s ease;
+  }
+  .sidebar-overlay.visible { display: block; opacity: 1; }
+
+  @media (max-width: 1024px) {
+    .story-summary { display: none; }
+    .resume-panel, .cover-letter-panel { flex-direction: column; }
+    .resume-controls { width: 100%; }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0;
+      transform: translateX(-100%); z-index: 50;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .hamburger { display: block; }
+
+    .main-header { padding: 1rem 1.25rem; }
+    .chat-area { padding: 1.25rem; }
+    .chat-input-bar { padding: 0.75rem 1.25rem 1rem; }
+    .msg-bubble { max-width: 85vw; }
+
+    .progress-steps { display: none; }
+
+    .vacancy-panel { padding: 1.5rem 1.25rem; }
+    .vacancy-input-area { padding: 1.25rem; }
+
+    .resume-panel, .cover-letter-panel { padding: 1.25rem; gap: 1rem; }
+    .resume-doc, .cl-doc { padding: 1.5rem; }
+    .resume-doc-name { font-size: 1.4rem; }
+
+    .apply-panel { padding: 2rem 1.25rem; }
+
+    .step-action-bar { padding: 0.85rem 1.25rem; }
+  }
+
+  @media (max-width: 480px) {
+    .resume-doc-contact { flex-direction: column; gap: 0.25rem; }
+    .resume-entry-header { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── Sidebar overlay (mobile) ── -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-mark">S</div>
+      <div class="logo-text">StoryCV</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <button class="nav-item active" onclick="goStep(1)">
+        <span class="nav-icon">💬</span> My Story
+      </button>
+      <button class="nav-item" onclick="goStep(2)">
+        <span class="nav-icon">📋</span> Vacancy
+      </button>
+      <button class="nav-item" onclick="goStep(3)">
+        <span class="nav-icon">📄</span> Resume
+      </button>
+      <button class="nav-item" onclick="goStep(4)">
+        <span class="nav-icon">✉️</span> Cover Letter
+      </button>
+      <button class="nav-item" onclick="goStep(5)">
+        <span class="nav-icon">🚀</span> Apply
+      </button>
+
+      <div class="nav-section-label">History</div>
+      <button class="nav-item">
+        <span class="nav-icon">📁</span> Past Applications
+        <span class="nav-badge">3</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="avatar">SM</div>
+      <div class="user-info">
+        <div class="user-name">Sarah Mitchell</div>
+        <div class="user-email">sarah@example.com</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <header class="main-header">
+      <div class="main-header-left">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <div>
+          <div class="page-title" id="pageTitle">Tell Your Story</div>
+          <div class="page-subtitle" id="pageSubtitle">Chat with AI to build your career profile</div>
+        </div>
+      </div>
+      <div class="progress-steps" id="progressSteps">
+        <div class="p-step active" data-step="1"><div class="p-step-dot">1</div><div class="p-step-label">Story</div></div>
+        <div class="p-step-line"></div>
+        <div class="p-step" data-step="2"><div class="p-step-dot">2</div><div class="p-step-label">Vacancy</div></div>
+        <div class="p-step-line"></div>
+        <div class="p-step" data-step="3"><div class="p-step-dot">3</div><div class="p-step-label">Resume</div></div>
+        <div class="p-step-line"></div>
+        <div class="p-step" data-step="4"><div class="p-step-dot">4</div><div class="p-step-label">Letter</div></div>
+        <div class="p-step-line"></div>
+        <div class="p-step" data-step="5"><div class="p-step-dot">5</div><div class="p-step-label">Apply</div></div>
+      </div>
+    </header>
+
+    <div class="main-content">
+
+      <!-- ═══ STEP 1: STORY CHAT ═══ -->
+      <div class="step-panel active" id="step1">
+        <div class="chat-area" id="chatArea">
+          <div class="chat-msg">
+            <div class="msg-avatar">S</div>
+            <div>
+              <div class="msg-bubble">Hi Sarah! I'm your StoryCV assistant. Let's build your career profile together. 🎯<br><br>Start by telling me — <strong>what's your most recent or current role?</strong> Don't worry about formatting, just talk naturally.</div>
+              <div class="msg-time">Just now</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-bar">
+          <div class="chat-input-wrap">
+            <textarea class="chat-input" id="chatInput" placeholder="Tell me about your experience..." rows="1" onkeydown="handleChatKey(event)"></textarea>
+            <button class="chat-action-btn btn-voice" id="voiceBtn" onclick="toggleVoice()" title="Voice input">🎙</button>
+            <button class="chat-action-btn btn-send" onclick="sendMessage()" title="Send">↑</button>
+          </div>
+          <div class="input-hint">Press Enter to send · Shift+Enter for new line · 🎙 for voice</div>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 2: VACANCY ═══ -->
+      <div class="step-panel" id="step2">
+        <div class="vacancy-panel">
+          <div class="vacancy-header">
+            <h2>Add a Job Vacancy</h2>
+            <p>Paste the job description or link — we'll tailor your resume to match</p>
+          </div>
+          <div class="vacancy-input-area">
+            <div class="vacancy-tabs">
+              <button class="vacancy-tab active" onclick="switchVacancyTab('paste', this)">Paste description</button>
+              <button class="vacancy-tab" onclick="switchVacancyTab('url', this)">Job URL</button>
+            </div>
+            <div id="vacancyPasteTab">
+              <textarea class="vacancy-paste" id="vacancyText" placeholder="Paste the full job description here...
+
+Example:
+Senior Product Manager at Notion
+We're looking for a PM who can lead cross-functional teams, drive product strategy, and ship features that millions of people love..."></textarea>
+            </div>
+            <div id="vacancyUrlTab" style="display:none">
+              <input class="vacancy-url-input" type="url" placeholder="https://notion.so/careers/senior-pm" id="vacancyUrl">
+            </div>
+
+            <div class="vacancy-preview" id="vacancyPreview">
+              <div class="vp-company">Notion</div>
+              <div class="vp-title">Senior Product Manager</div>
+              <div class="vp-tags">
+                <span class="vp-tag">Product Strategy</span>
+                <span class="vp-tag">Cross-functional</span>
+                <span class="vp-tag">Remote</span>
+                <span class="vp-tag">5+ years</span>
+                <span class="vp-tag">$150k–$200k</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step-action-bar">
+          <button class="btn-step btn-step-back" onclick="goStep(1)">← Back to story</button>
+          <button class="btn-step btn-step-next" onclick="analyzeVacancy()">Analyze & build resume →</button>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 3: RESUME ═══ -->
+      <div class="step-panel" id="step3">
+        <div class="resume-panel">
+          <div class="resume-preview-col">
+            <div class="resume-doc">
+              <div class="resume-doc-header">
+                <div class="resume-doc-name">Sarah Mitchell</div>
+                <div class="resume-doc-role">Senior Product Manager</div>
+                <div class="resume-doc-contact">
+                  <span>sarah@example.com</span>
+                  <span>San Francisco, CA</span>
+                  <span>linkedin.com/in/sarahmitchell</span>
+                </div>
+              </div>
+
+              <div class="resume-section">
+                <div class="resume-section-title">Professional Summary</div>
+                <p style="font-size:0.88rem;line-height:1.65;color:#444;">Results-driven Product Manager with 6+ years of experience leading cross-functional teams in fast-paced tech environments. Proven track record of shipping products that drive user engagement and revenue growth. Skilled at translating complex business problems into clear product strategies.</p>
+              </div>
+
+              <div class="resume-section">
+                <div class="resume-section-title">Experience</div>
+                <div class="resume-entry">
+                  <div class="resume-entry-header">
+                    <div class="resume-entry-title">Product Manager</div>
+                    <div class="resume-entry-date">2022 – Present</div>
+                  </div>
+                  <div class="resume-entry-company">TechCo, San Francisco</div>
+                  <ul class="resume-entry-bullets">
+                    <li>Led cross-functional team of 12 to ship 3 major features, increasing user engagement by 40%</li>
+                    <li>Drove product strategy that grew quarterly revenue by 3x ($2M → $6M)</li>
+                    <li>Established data-driven prioritization framework adopted across 4 product teams</li>
+                  </ul>
+                </div>
+                <div class="resume-entry">
+                  <div class="resume-entry-header">
+                    <div class="resume-entry-title">Marketing Lead</div>
+                    <div class="resume-entry-date">2019 – 2022</div>
+                  </div>
+                  <div class="resume-entry-company">StartupXY, Remote</div>
+                  <ul class="resume-entry-bullets">
+                    <li>Built marketing team from scratch, grew organic traffic by 300% in 18 months</li>
+                    <li>Launched product-led growth initiative that improved conversion rates by 25%</li>
+                  </ul>
+                </div>
+                <div class="resume-entry">
+                  <div class="resume-entry-header">
+                    <div class="resume-entry-title">Shift Lead & Barista Trainer</div>
+                    <div class="resume-entry-date">2017 – 2019</div>
+                  </div>
+                  <div class="resume-entry-company">Blue Bottle Coffee, Oakland</div>
+                  <ul class="resume-entry-bullets">
+                    <li>Managed daily operations and trained 8 new team members on service standards</li>
+                    <li>Improved morning rush throughput by 20% through workflow optimization</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="resume-section">
+                <div class="resume-section-title">Key Skills</div>
+                <div class="resume-skills-grid">
+                  <span class="resume-skill">Product Strategy</span>
+                  <span class="resume-skill">Cross-functional Leadership</span>
+                  <span class="resume-skill">Data Analysis</span>
+                  <span class="resume-skill">Agile/Scrum</span>
+                  <span class="resume-skill">User Research</span>
+                  <span class="resume-skill">Roadmapping</span>
+                  <span class="resume-skill">A/B Testing</span>
+                  <span class="resume-skill">Stakeholder Management</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="resume-controls">
+            <div class="control-card">
+              <div class="control-card-title">🎯 Vacancy Match</div>
+              <div class="match-meter"><div class="match-meter-fill" style="width: 92%"></div></div>
+              <div class="match-label"><span>Match score</span><span>92%</span></div>
+            </div>
+
+            <div class="control-card">
+              <div class="control-card-title">🔑 Keywords</div>
+              <div class="keyword-list">
+                <div class="keyword-item"><span>Product Strategy</span><span class="kw-found">✓ Found</span></div>
+                <div class="keyword-item"><span>Cross-functional</span><span class="kw-found">✓ Found</span></div>
+                <div class="keyword-item"><span>Data-driven</span><span class="kw-found">✓ Found</span></div>
+                <div class="keyword-item"><span>User Research</span><span class="kw-found">✓ Found</span></div>
+                <div class="keyword-item"><span>SQL</span><span class="kw-missing">○ Missing</span></div>
+              </div>
+            </div>
+
+            <div class="control-card" style="display: flex; flex-direction: column; gap: 0.6rem;">
+              <button class="btn-control btn-control-primary">📥 Download PDF</button>
+              <button class="btn-control btn-control-outline">✏️ Edit manually</button>
+              <button class="btn-control btn-control-outline">🔄 Regenerate</button>
+            </div>
+          </div>
+        </div>
+        <div class="step-action-bar">
+          <button class="btn-step btn-step-back" onclick="goStep(2)">← Back</button>
+          <button class="btn-step btn-step-next" onclick="goStep(4)">Generate cover letter →</button>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 4: COVER LETTER ═══ -->
+      <div class="step-panel" id="step4">
+        <div class="cover-letter-panel">
+          <div class="resume-preview-col">
+            <div class="cl-doc">
+              <div class="cl-header">
+                <div class="cl-date">March 12, 2026</div>
+                <p style="font-size:0.88rem;color:var(--muted);">Hiring Manager<br>Notion<br>San Francisco, CA</p>
+              </div>
+              <div class="cl-greeting">Dear Hiring Team,</div>
+              <div class="cl-body">
+                <p>I'm excited to apply for the Senior Product Manager position at Notion. With 6+ years of product leadership experience and a track record of driving user engagement and revenue growth, I'm confident I can contribute meaningfully to Notion's mission of making tooling that feels like an extension of your brain.</p>
+                <p>At TechCo, I led a cross-functional team of 12 to ship three major features that increased user engagement by 40% and grew quarterly revenue from $2M to $6M. I established a data-driven prioritization framework that was adopted across four product teams — the kind of systematic thinking I'd bring to Notion's product org.</p>
+                <p>What draws me to Notion specifically is the way you approach product complexity with elegant simplicity. My experience spans the full spectrum — from building marketing engines at a scrappy startup to optimizing operational workflows in high-volume environments. This range gives me a unique perspective on building products that serve diverse user needs.</p>
+                <p>I'd love the opportunity to discuss how my experience aligns with Notion's goals. Thank you for considering my application.</p>
+              </div>
+              <div class="cl-signature">
+                Warmly,<br>
+                <strong>Sarah Mitchell</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="resume-controls">
+            <div class="control-card">
+              <div class="control-card-title">✉️ Letter tone</div>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <button class="btn-control btn-control-outline" style="flex:1;min-width:0;padding:0.6rem;font-size:0.8rem;background:var(--ink);color:var(--paper);border-color:var(--ink);">Professional</button>
+                <button class="btn-control btn-control-outline" style="flex:1;min-width:0;padding:0.6rem;font-size:0.8rem;">Enthusiastic</button>
+                <button class="btn-control btn-control-outline" style="flex:1;min-width:0;padding:0.6rem;font-size:0.8rem;">Conversational</button>
+              </div>
+            </div>
+            <div class="control-card" style="display: flex; flex-direction: column; gap: 0.6rem;">
+              <button class="btn-control btn-control-primary">📥 Download PDF</button>
+              <button class="btn-control btn-control-outline">✏️ Edit manually</button>
+              <button class="btn-control btn-control-outline">🔄 Regenerate</button>
+            </div>
+          </div>
+        </div>
+        <div class="step-action-bar">
+          <button class="btn-step btn-step-back" onclick="goStep(3)">← Back to resume</button>
+          <button class="btn-step btn-step-accent" onclick="goStep(5)">🚀 Review & Apply</button>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 5: APPLY ═══ -->
+      <div class="step-panel" id="step5">
+        <div class="apply-panel">
+          <div class="apply-success-icon">🚀</div>
+          <h2 class="apply-title">Ready to apply!</h2>
+          <p class="apply-subtitle">Your tailored resume and cover letter are ready. Review everything below and send your application.</p>
+
+          <div class="apply-card">
+            <div class="apply-card-row">
+              <div class="apply-card-label">Position</div>
+              <div class="apply-card-value">Senior Product Manager</div>
+            </div>
+            <div class="apply-card-row">
+              <div class="apply-card-label">Company</div>
+              <div class="apply-card-value">Notion</div>
+            </div>
+            <div class="apply-card-row">
+              <div class="apply-card-label">Match</div>
+              <div class="apply-card-value" style="color:var(--sage);">92% match</div>
+            </div>
+            <div class="apply-card-row">
+              <div class="apply-card-label">Attachments</div>
+              <div class="apply-card-value">
+                <div class="apply-attachments">
+                  <div class="attach-chip"><span class="attach-icon">📄</span> Resume_Notion.pdf</div>
+                  <div class="attach-chip"><span class="attach-icon">✉️</span> CoverLetter_Notion.pdf</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0.75rem; max-width:360px; margin:0 auto;">
+            <button class="btn-step btn-step-accent" style="width:100%;justify-content:center;padding:1rem;" onclick="submitApplication()">
+              Send application →
+            </button>
+            <button class="btn-step btn-step-back" style="justify-content:center;" onclick="goStep(4)">← Back to cover letter</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Step navigation ──
+  let currentStep = 1;
+  const stepTitles = {
+    1: ['Tell Your Story', 'Chat with AI to build your career profile'],
+    2: ['Add Vacancy', 'Paste a job listing to tailor your resume'],
+    3: ['Your Resume', 'AI-generated and tailored to the vacancy'],
+    4: ['Cover Letter', 'Personalized letter for this application'],
+    5: ['Apply', 'Review and send your application'],
+  };
+
+  function goStep(n) {
+    currentStep = n;
+
+    // Panels
+    document.querySelectorAll('.step-panel').forEach((p, i) => {
+      p.classList.toggle('active', i + 1 === n);
+    });
+
+    // Header
+    document.getElementById('pageTitle').textContent = stepTitles[n][0];
+    document.getElementById('pageSubtitle').textContent = stepTitles[n][1];
+
+    // Progress
+    document.querySelectorAll('.p-step').forEach(s => {
+      const sn = parseInt(s.dataset.step);
+      s.classList.remove('active', 'completed');
+      if (sn < n) s.classList.add('completed');
+      if (sn === n) s.classList.add('active');
+    });
+
+    document.querySelectorAll('.p-step-line').forEach((line, i) => {
+      line.classList.toggle('done', i + 1 < n);
+    });
+
+    // Sidebar
+    document.querySelectorAll('.nav-item').forEach((item, i) => {
+      item.classList.toggle('active', i === n - 1);
+    });
+
+    // Close mobile sidebar
+    closeSidebar();
+  }
+
+  // ── Sidebar ──
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('visible');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('visible');
+  }
+
+  // ── Chat ──
+  const aiResponses = [
+    "Great! That's a solid role. How long were you at TechCo, and what was your biggest achievement there?",
+    "Impressive — growing revenue 3x is a strong signal. What did you do before TechCo? Any earlier roles that shaped your skills?",
+    "I love that you included the barista experience — it shows customer empathy and operational skills. Any education or certifications you'd like to include?",
+    "Perfect, I now have a great picture of your career. Let's move to the next step — adding a job vacancy so I can tailor your resume specifically. Click 'Next' when you're ready!",
+  ];
+  let responseIndex = 0;
+
+  function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    appendMsg(text, true);
+    input.value = '';
+    input.style.height = 'auto';
+
+    // Show typing then respond
+    const typing = showTyping();
+    setTimeout(() => {
+      typing.remove();
+      if (responseIndex < aiResponses.length) {
+        appendMsg(aiResponses[responseIndex], false);
+        responseIndex++;
+      } else {
+        appendMsg("You're doing great! Feel free to add more details, or we can proceed to adding a vacancy when you're ready.", false);
+      }
+    }, 1200 + Math.random() * 800);
+  }
+
+  function appendMsg(text, isUser) {
+    const area = document.getElementById('chatArea');
+    const div = document.createElement('div');
+    div.className = 'chat-msg' + (isUser ? ' user' : '');
+    div.innerHTML = `
+      <div class="msg-avatar">${isUser ? 'SM' : 'S'}</div>
+      <div>
+        <div class="msg-bubble">${text}</div>
+        <div class="msg-time">Just now</div>
+      </div>
+    `;
+    area.appendChild(div);
+    area.scrollTop = area.scrollHeight;
+  }
+
+  function showTyping() {
+    const area = document.getElementById('chatArea');
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    div.innerHTML = `
+      <div class="msg-avatar">S</div>
+      <div>
+        <div class="typing-indicator">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
+    `;
+    area.appendChild(div);
+    area.scrollTop = area.scrollHeight;
+    return div;
+  }
+
+  function handleChatKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+    // Auto-resize
+    setTimeout(() => {
+      e.target.style.height = 'auto';
+      e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+    }, 0);
+  }
+
+  // ── Voice ──
+  let isRecording = false;
+  function toggleVoice() {
+    const btn = document.getElementById('voiceBtn');
+    isRecording = !isRecording;
+    btn.classList.toggle('recording', isRecording);
+    btn.textContent = isRecording ? '⏹' : '🎙';
+    if (!isRecording) {
+      // Simulate voice-to-text
+      const input = document.getElementById('chatInput');
+      input.value = "I worked as a product manager at TechCo for three years. I led a team of twelve people and we shipped three major features that boosted engagement by forty percent.";
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    }
+  }
+
+  // ── Vacancy tabs ──
+  function switchVacancyTab(tab, el) {
+    document.querySelectorAll('.vacancy-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('vacancyPasteTab').style.display = tab === 'paste' ? 'block' : 'none';
+    document.getElementById('vacancyUrlTab').style.display = tab === 'url' ? 'block' : 'none';
+  }
+
+  // Vacancy analyze simulation
+  function analyzeVacancy() {
+    const text = document.getElementById('vacancyText').value;
+    if (text.length > 20) {
+      document.getElementById('vacancyPreview').classList.add('visible');
+    }
+    setTimeout(() => goStep(3), 600);
+  }
+
+  // ── Listen for vacancy input ──
+  document.getElementById('vacancyText')?.addEventListener('input', function() {
+    if (this.value.length > 50) {
+      document.getElementById('vacancyPreview').classList.add('visible');
+    }
+  });
+
+  // ── Apply ──
+  function submitApplication() {
+    const btn = event.target;
+    btn.textContent = 'Sending...';
+    btn.style.opacity = '0.7';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.innerHTML = '✓ Application sent!';
+      btn.style.opacity = '1';
+      btn.style.background = 'var(--sage)';
+      btn.style.boxShadow = '0 4px 20px rgba(129,178,154,0.3)';
+    }, 2000);
+  }
+</script>
+
+</body>
+</html>
